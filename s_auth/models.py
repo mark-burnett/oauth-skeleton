@@ -22,9 +22,10 @@ class Client(Base):
     client_pk = Column(Integer, primary_key=True)
     client_id = Column(Text, index=True, unique=True, nullable=False,
             default=lambda: double_uuid_generator() + ':ci')
-    client_secret = Column(Text, nullable=False,
+    client_secret = Column(Text,
             default=lambda: double_uuid_generator() + ':cs')
     name = Column(Text)
+    grant_type = Column(Text, nullable=False)
 
     _scope = Column(Text)
 

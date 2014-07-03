@@ -49,7 +49,8 @@ class OAuthRequestValidator(RequestValidator):
         self.session.commit()
 
     def client_authentication_required(self, request):
-        return True
+        c = self._get_client(request.client_id)
+        return c.client_secret is not None
 
     # XXX DO STUFF
     def authenticate_client(self, request):
@@ -62,7 +63,7 @@ class OAuthRequestValidator(RequestValidator):
             return False
 
     def validate_grant_type(self, client_id, grant_type, client, request):
-        return grant_type == 'authorization_code'
+        return grant_type == client.grant_type
 
     def validate_code(self, client_id, code, client, request):
         return True
