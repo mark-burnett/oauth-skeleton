@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+from s_client import backend
 from s_client.views import app
 from urlparse import urlparse
 
@@ -20,5 +21,10 @@ def port():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+
+    args = parse_args()
+
+    if args.data:
+        backend.insert_data_from_file(args.data)
 
     app.run(port=port(), host='0.0.0.0')

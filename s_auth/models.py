@@ -24,8 +24,11 @@ class Client(Base):
             default=lambda: double_uuid_generator() + ':ci')
     client_secret = Column(Text,
             default=lambda: double_uuid_generator() + ':cs')
+    requires_validation = Column(Boolean, default=True)
+
     name = Column(Text)
     grant_type = Column(Text, nullable=False)
+    response_type = Column(Text, nullable=False)
 
     _scope = Column(Text)
 

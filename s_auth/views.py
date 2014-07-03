@@ -3,7 +3,7 @@ from . import models
 from .oauth_validator import OAuthRequestValidator
 from flask import jsonify, request
 from flask.views import MethodView
-from oauthlib.oauth2 import WebApplicationServer
+from oauthlib.oauth2 import MobileApplicationServer, WebApplicationServer
 import flask
 import logging
 import urllib
@@ -15,23 +15,46 @@ LOG = logging.getLogger(__file__)
 # -- OAuth setup
 session = backend.Session()
 oauth_validator = OAuthRequestValidator(session)
-oauth = WebApplicationServer(oauth_validator)
+oauth_implicit = MobileApplicationServer(oauth_validator)
+oauth_web = WebApplicationServer(oauth_validator)
 
 
 # -- Views
-class AuthorizeView(MethodView):
+class WebAuthorizeView(MethodView):
     def get(self):
         return '', 401, {'Location': request.url}
 
     def post(self):
         # XXX Need a better way to extract data (why doesn't c_a_r do this?)
-        scopes, request_data = oauth.validate_authorization_request(
+        scopes, request_data = oauth_web.validate_authorization_request(
                 uri=request.url, body=request.data, headers=request.headers)
 
         api_key = request.headers['Authorization'][8:]
         LOG.debug('API key: (%s)', api_key)
 
-        headers, body, status_code = oauth.create_authorization_response(
+        headers, body, status_code = oauth_web.create_authorization_response(
+                uri=request.url, headers=request.headers, scopes=scopes,
+                credentials={'api_key': api_key})
+
+        LOG.info('authorize c_a_r: (%s, %s, %s)', headers, body,
+            status_code)
+
+        return '', status_code, headers
+
+
+class ImplicitAuthorizeView(MethodView):
+    def get(self):
+        return '', 401, {'Location': request.url}
+
+    def post(self):
+        # XXX Need a better way to extract data (why doesn't c_a_r do this?)
+        scopes, request_data = oauth_implicit.validate_authorization_request(
+                uri=request.url, body=request.data, headers=request.headers)
+
+        api_key = request.headers['Authorization'][8:]
+        LOG.debug('API key: (%s)', api_key)
+
+        headers, body, status_code = oauth_implicit.create_authorization_response(
                 uri=request.url, headers=request.headers, scopes=scopes,
                 credentials={'api_key': api_key})
 
@@ -45,7 +68,7 @@ class TokenView(MethodView):
     def post(self):
         regenerated_body = urllib.urlencode(request.form)
 
-        headers, body, status_code = oauth.create_token_response(
+        headers, body, status_code = oauth_web.create_token_response(
                 uri=request.url, headers=request.headers, body=regenerated_body)
 
         return body, status_code, headers
@@ -70,12 +93,15 @@ class ValidateView(MethodView):
 
     def validate_client(self, data):
         r = RequestTuple(client_id=data['client_id'],
-                client_secret=data['client_secret'])
+                client_secret=data.get('client_secret'))
 
-        return oauth_validator.authenticate_client(r)
+        if oauth_validator.client_authentication_required(r):
+            return oauth_validator.authenticate_client(r)
+
+        else:
+            return True
 
     def validate_token(self, data):
-        print 'validation data', data
         bearer_token = request.headers.get('Authorization', '')[7:]
         access_token = session.query(models.AccessToken).filter_by(
                 token=bearer_token).first()
@@ -102,6 +128,9 @@ class ValidateView(MethodView):
 
 # -- Flask app
 app = flask.Flask('Auth')
-app.add_url_rule('/authorize', view_func=AuthorizeView.as_view('authorize'))
+app.add_url_rule('/web-authorize',
+        view_func=WebAuthorizeView.as_view('web-authorize'))
+app.add_url_rule('/implicit-authorize',
+        view_func=ImplicitAuthorizeView.as_view('implicit-authorize'))
 app.add_url_rule('/token', view_func=TokenView.as_view('token'))
 app.add_url_rule('/validate', view_func=ValidateView.as_view('validate'))

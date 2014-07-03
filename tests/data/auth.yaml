@@ -1,13 +1,13 @@
 users:
     alice:
         api_keys: ['alice:k']
-        roles: [foo]
+        roles: [foo, all]
     bob:
         api_keys: ['bob:k']
-        roles: [foo, bar]
+        roles: [foo, bar, all]
     charlie:
         api_keys: ['charlie:k']
-        roles: []
+        roles: [all]
 
 clients:
     Client:
@@ -15,13 +15,16 @@ clients:
         client_id: 'client:ci'
         client_secret: 'client:cs'
         grant_type: authorization_code
+        response_type: code
     Resource:
         scopes: []
         client_id: 'resource:ci'
         client_secret: 'resource:cs'
         grant_type: none
+        response_type: none
     User:
         scopes: [client]
         client_id: 'user:ci'
-        client_secret: null
+        requires_validation: false
         grant_type: implicit
+        response_type: token

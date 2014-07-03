@@ -4,6 +4,7 @@ from flask import jsonify, request
 from flask.views import MethodView
 from s_common.validate import validate_request_roles
 import flask
+import os
 
 
 class ResourceView(MethodView):
@@ -16,7 +17,9 @@ class ResourceView(MethodView):
 
         resource = s.query(models.Resource).get(name)
         if resource and validate_request_roles(scopes='resource',
-                allowed_roles=resource.allowed_roles):
+                allowed_roles=resource.allowed_roles,
+                client_id=os.environ['RESOURCE_CLIENT_ID'],
+                client_secret=os.environ['RESOURCE_CLIENT_SECRET']):
             return jsonify(resource.as_dict), 200
 
         else:

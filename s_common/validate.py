@@ -1,17 +1,19 @@
 from flask import request
 from .auth import auth_url
-import os
 import requests
 import simplejson
 
 
-def validate_request_roles(scopes, allowed_roles):
+def validate_request_roles(scopes, allowed_roles, client_id,
+        client_secret=None):
     request_data = {
         'allowed_roles': allowed_roles,
         'scopes': scopes,
-        'client_id': os.environ['RESOURCE_CLIENT_ID'],
-        'client_secret': os.environ['RESOURCE_CLIENT_SECRET'],
+        'client_id': client_id,
     }
+    if client_secret:
+        request_data['client_secret'] = client_secret
+
     request_headers = {
         'Authorization': request.headers['Authorization'],
         'Content-Type': 'application/json',

@@ -10,6 +10,10 @@ class OAuthRequestValidator(RequestValidator):
         return self.session.query(models.Client
                 ).filter_by(client_id=client_id).first()
 
+    def _get_key(self, request):
+        return self.session.query(models.Key
+                ).filter_by(key=request.headers['Authorization'][8:]).one()
+
     def validate_client_id(self, client_id, request):
         return self._get_client(client_id) is not None
 
@@ -36,11 +40,11 @@ class OAuthRequestValidator(RequestValidator):
         return self._get_client(client_id).scopes
 
     def validate_response_type(self, client_id, response_type, client, request):
-        return response_type == 'code'
+        c = self._get_client(client_id)
+        return response_type == c.response_type
 
     def save_authorization_code(self, client_id, code, request):
-        key = self.session.query(models.Key
-                ).filter_by(key=request.headers['Authorization'][8:]).one()
+        key = self._get_key(request)
 
         ac = models.AuthorizationCode(code=code['code'],
                 api_key=key, client=self._get_client(client_id))
@@ -50,9 +54,8 @@ class OAuthRequestValidator(RequestValidator):
 
     def client_authentication_required(self, request):
         c = self._get_client(request.client_id)
-        return c.client_secret is not None
+        return c.requires_validation
 
-    # XXX DO STUFF
     def authenticate_client(self, request):
         c = self._get_client(request.client_id)
         if request.client_secret == c.client_secret:
@@ -70,13 +73,22 @@ class OAuthRequestValidator(RequestValidator):
                 code=code, client=client).first()
 
     def confirm_redirect_uri(self, client_id, code, redirect_uri, client):
+        # XXX Should be picky, maybe each client registers a regex?
         return True
 
     def save_bearer_token(self, token, request):
         code = self.session.query(models.AuthorizationCode
-                ).filter_by(code=request.code).one()
+                ).filter_by(code=request.code).first()
 
-        r = models.RefreshToken(token=token['refresh_token'],
+        if not code:
+            # XXX Be sure to set this code as inactive
+            client = self._get_client(request.client_id)
+            code = models.AuthorizationCode(client=client,
+                    api_key=self._get_key(request))
+            code.scope = request.scopes
+            self.session.add(code)
+
+        r = models.RefreshToken(token=token.get('refresh_token'),
                 authorization_code=code)
         a = models.AccessToken(token=token['access_token'], refresh_token=r)
         self.session.add(r)
