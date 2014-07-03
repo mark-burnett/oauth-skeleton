@@ -16,9 +16,7 @@ class ForwardedResourceView(MethodView):
                     client_secret=os.environ['CLIENT_CLIENT_SECRET'],
                     authorization_response=request.url)
 
-            response = requests.get(self.forward_url(name), headers={
-                    'Authorization': 'Bearer %s' % token['access_token'],
-                })
+            response = oauth_session.get(self.forward_url(name))
             return response.text, response.status_code
 
         else:
