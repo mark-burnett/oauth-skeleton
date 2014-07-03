@@ -1,0 +1,23 @@
+users:
+    alice:
+        api_keys: ['alice:k']
+        roles: [foo]
+    bob:
+        api_keys: ['bob:k']
+        roles: [foo, bar]
+    charlie:
+        api_keys: ['charlie:k']
+        roles: []
+
+clients:
+    Client:
+        scopes: [resource]
+        client_id: 'client:ci'
+        client_secret: 'client:cs'
+    Resource:
+        scopes: []
+        client_id: 'resource:ci'
+        client_secret: 'resource:cs'
+    User:
+        scopes: [client]
+        client_id: 'user:ci'

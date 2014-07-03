@@ -1,0 +1,10 @@
+resources:
+    foo:
+        data: HERE IS SOME CRAXZY FOO DATA
+        allowed_roles: [foo]
+    bar:
+        data: MORE CRAZY DATA
+        allowed_roles: [bar]
+    baz:
+        data: Anyone can see this
+        allowed_roles: []

@@ -1,4 +1,7 @@
 flask
 oauthlib
+pyyaml
 requests
+requests-oauthlib
 simplejson
+sqlalchemy
