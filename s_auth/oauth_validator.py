@@ -66,7 +66,8 @@ class OAuthRequestValidator(RequestValidator):
         return grant_type == client.grant_type
 
     def validate_code(self, client_id, code, client, request):
-        return True
+        return self.session.query(models.AuthorizationCode).filter_by(
+                code=code, client=client).first()
 
     def confirm_redirect_uri(self, client_id, code, redirect_uri, client):
         return True
