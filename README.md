@@ -1,5 +1,6 @@
 # Scratch OAuth
 [![Build Status](https://travis-ci.org/mark-burnett/oauth-skeleton.svg?branch=master)](https://travis-ci.org/mark-burnett/oauth-skeleton)
+[![Coverage Status](https://img.shields.io/coveralls/mark-burnett/oauth-skeleton.svg)](https://coveralls.io/r/mark-burnett/oauth-skeleton)
 
 ## Description
 
